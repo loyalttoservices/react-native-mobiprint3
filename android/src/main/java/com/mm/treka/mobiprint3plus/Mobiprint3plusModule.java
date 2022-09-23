@@ -1,7 +1,6 @@
-// Mobiprint3plusModule.java
-
 package com.mm.treka.mobiprint3plus;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -36,24 +35,36 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
     return "Mobiprint3plus";
   }
 
-  @Override
-  protected void onResume() {
-    super.onResume();
-
-    //initialize mp3 printer
-    new MobiiotAPI(this);
+  @ReactMethod
+  public void printText(String text) {
+    printer.printText(text);
   }
 
   @ReactMethod
-  private int mp3Print(byte[] data) {
-    int result = 0;
+  public void printHeader(String text) {
+    printer.printText("********************************");
+    printer.printText("******** " + text + " *********");
+    printer.printText("********************************");
+  }
 
-    System.out.println("before csprinter");
+  @ReactMethod
+  public void printLine() {
+    printer.printText("================================");
+  }
 
-    CsPrinter.printText("text test ");
+  @ReactMethod
+  public void connectPOS() {
+    Context context = this.reactContext.getCurrentActivity();
+    this.printer = new CsPrinter();
+    try {
+      new MobiiotAPI(context);
+    } catch (NullPointerException ex) {
+      ex.printStackTrace();
+    }
+  }
 
-    System.out.println("after csprinter");
-
+  @ReactMethod
+  public void printImage(byte[] data) {
     try {
       if (data != null) {
         Bitmap mBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
@@ -70,15 +81,10 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
           ),
           Bitmap.Config.ARGB_8888
         );
-
-        result = -1;
       }
     } catch (Exception ex) {
       System.out.println("Quelque chose ne va pas sur MOBIIOT");
-      result = 0;
     }
-
-    return result;
   }
 
   public static Bitmap convert(Bitmap bitmap, Bitmap.Config config) {
@@ -96,16 +102,7 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
 
   public void printBitmap(Bitmap bitmap, Bitmap.Config config) {
     Bitmap bit = convert(bitmap, config);
-    //        CsPrinter.printText("-----------------------------");
-    //        CsPrinter.printText("width   = "+bit.getWidth());
-    //        CsPrinter.printText("width/8 = "+(float)bit.getWidth()/8);
-    //        CsPrinter.printText("bit     = "+bit.getConfig());
-    CsPrinter.printBitmap(bit);
-  }
-
-  @ReactMethod
-  public void printText(String text) {
-    CsPrinter.printText(text);
+    printer.printBitmap(bit);
   }
 
   public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
@@ -130,5 +127,11 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
     );
     bm.recycle();
     return resizedBitmap;
+  }
+
+  @ReactMethod
+  public void print() {
+    // Context context = this.reactContext.getCurrentActivity();
+    printer.printEndLine();
   }
 }
