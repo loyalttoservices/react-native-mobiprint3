@@ -36,23 +36,6 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void printText(String text) {
-    printer.printText(text);
-  }
-
-  @ReactMethod
-  public void printHeader(String text) {
-    printer.printText("********************************");
-    printer.printText("******** " + text + " *********");
-    printer.printText("********************************");
-  }
-
-  @ReactMethod
-  public void printLine() {
-    printer.printText("================================");
-  }
-
-  @ReactMethod
   public void connectPOS() {
     Context context = this.reactContext.getCurrentActivity();
     this.printer = new CsPrinter();
@@ -61,6 +44,70 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
     } catch (NullPointerException ex) {
       ex.printStackTrace();
     }
+  }
+
+  @ReactMethod
+  public void printText(String text) {
+    printer.printText(text);
+  }
+
+  @ReactMethod
+  public void printCustomText(
+    String text,
+    int size,
+    int align,
+    int center,
+    boolean bold,
+    boolean underline
+  ) {
+    printer.printText_FullParam(text, size, align, 1, center, bold, underline);
+  }
+
+  @ReactMethod
+  public void printLeftText(
+    String text,
+    int size,
+    boolean bold,
+    boolean underline
+  ) {
+    printer.printText_FullParam(text, size, 0, 1, 0, bold, underline);
+  }
+
+  @ReactMethod
+  public void printRightText(
+    String text,
+    int size,
+    boolean bold,
+    boolean underline
+  ) {
+    printer.printText_FullParam(text, size, 1, 1, 0, bold, underline);
+  }
+
+  @ReactMethod
+  public void printCenterText(
+    String text,
+    int size,
+    boolean bold,
+    boolean underline
+  ) {
+    printer.printText_FullParam(text, size, 0, 1, 1, bold, underline);
+  }
+
+  @ReactMethod
+  public void printHeader(String text) {
+    printCenterText("********************************", 1, true, false);
+    printCenterText("*********** " + text + " ************", 1, true, false);
+    printCenterText("********************************", 1, true, false);
+  }
+
+  @ReactMethod
+  public void printLine() {
+    printer.printCenterText(
+      "================================",
+      1,
+      false,
+      false
+    );
   }
 
   @ReactMethod
