@@ -1,6 +1,7 @@
 package com.mm.treka.mobiprint3plus;
 
 import android.content.Context;
+import android.util.Base64;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -107,18 +108,31 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
       1,
       false,
       false
-    );
+    ); 
   }
 
   @ReactMethod
-  public void printImage(byte[] data) {
+  public void printImage(String base64encodeStr, @Nullable  ReadableMap options) {
+    int width = 0;
+    int leftPadding = 0;
+    if(options!=null){
+        width = options.hasKey("width") ? options.getInt("width") : 0;
+        leftPadding = options.hasKey("left")?options.getInt("left") : 0;
+    }
+
+    //cannot larger then devicesWith;
+    if(width > 384 || width == 0){
+        width = 384;
+    }
+
     try {
-      if (data != null) {
-        Bitmap mBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+      byte[] bytes = Base64.decode(base64encodeStr, Base64.DEFAULT);
+      if (bytes != null) {
+        Bitmap mBitmap = BitmapFactory.decodeByteArray(bytes, 0, data.length);
 
         int mwidth = mBitmap.getWidth();
 
-        int deffInWidth = 384 - mwidth;
+        int deffInWidth = width - mwidth;
 
         printBitmap(
           getResizedBitmap(
@@ -181,4 +195,131 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
     // Context context = this.reactContext.getCurrentActivity();
     printer.printEndLine();
   }
+
+  @ReactMethod
+  public void printColumn(ReadableArray columnWidths,ReadableArray columnAligns,ReadableArray columnTexts, @Nullable ReadableMap options){
+    if(columnWidths.size()!=columnTexts.size() || columnWidths.size()!=columnAligns.size()){
+      System.out.println("COLUMN_WIDTHS_ALIGNS_AND_TEXTS_NOT_MATCH");
+      return;
+    }
+    int totalLen = 0;
+    for(int i=0;i<columnWidths.size();i++){
+      totalLen+=columnWidths.getInt(i);
+    }
+    int maxLen = 384 / 8;
+    if(totalLen>maxLen){
+      System.out.println("COLUNM_WIDTHS_TOO_LARGE");
+      return;
+    }
+
+    String size = 0;
+    int align = 0;
+    int center = 0;
+    int bold = false;
+    int underline = false;
+    if (options != null) {
+      size = options.hasKey("size") ? options.getString("size") : 0;
+      align = options.hasKey("align") ? options.getInt("align") : 0;
+      center = options.hasKey("center") ? options.getInt("center") : 0;
+      bold = options.hasKey("bold") ? options.getBoolean("bold") : false;
+      underline = options.hasKey("underline") ? options.getBoolean("underline") : false;
+    }
+
+    List<List<String>> table = new ArrayList<List<String>>();
+
+    /**splits the column text to few rows and applies the alignment **/
+    int padding = 1;
+    for(int i=0;i<columnWidths.size();i++){
+      int width =columnWidths.getInt(i)-padding;//1 char padding
+      String text = String.copyValueOf(columnTexts.getString(i).toCharArray());
+      List<ColumnSplitedString> splited = new ArrayList<ColumnSplitedString>();
+      int shorter = 0;
+      int counter = 0;
+      String temp = "";
+      for(int c=0;c<text.length();c++){
+          char ch = text.charAt(c);
+          int l = 1;
+          temp=temp+ch;
+
+          if(counter+l<width){
+              counter = counter+l;
+          } else {
+              splited.add(new ColumnSplitedString(shorter,temp));
+              temp = "";
+              counter=0;
+              shorter=0;
+          }
+      }
+      if(temp.length()>0) {
+          splited.add(new ColumnSplitedString(shorter,temp));
+      }
+      int align = columnAligns.getInt(i);
+
+      List<String> formated = new ArrayList<String>();
+      for(ColumnSplitedString s: splited){
+          StringBuilder empty = new StringBuilder();
+          for(int w=0;w<(width+padding-s.getShorter());w++){
+              empty.append(" ");
+          }
+          int startIdx = 0;
+          String ss = s.getStr();
+          if(align == 1 && ss.length()<(width-s.getShorter())){
+              startIdx = (width-s.getShorter()-ss.length())/2;
+              if(startIdx+ss.length()>width-s.getShorter()){
+                  startIdx--;
+              }
+              if(startIdx<0){
+                  startIdx=0;
+              }
+          } else if (align==2 && ss.length()<(width-s.getShorter())){
+              startIdx =width - s.getShorter()-ss.length();
+          }
+          empty.replace(startIdx,startIdx+ss.length(),ss);
+          formated.add(empty.toString());
+      }
+      table.add(formated);
+    }
+
+    /**  try to find the max row count of the table **/
+    int maxRowCount = 0;
+    for(int i=0;i<table.size()/*column count*/;i++){
+      List<String> rows = table.get(i); // row data in current column
+      if(rows.size()>maxRowCount){maxRowCount = rows.size();}// try to find the max row count;
+    }
+
+    /** loop table again to fill the rows **/
+    StringBuilder[] rowsToPrint = new StringBuilder[maxRowCount];
+    for(int column=0;column<table.size()/*column count*/;column++){
+      List<String> rows = table.get(column); // row data in current column
+      for(int row=0;row<maxRowCount;row++){
+          if(rowsToPrint[row]==null){
+              rowsToPrint[row] = new StringBuilder();
+          }
+          if(row<rows.size()){
+              //got the row of this column
+              rowsToPrint[row].append(rows.get(row));
+          }else{
+              int w =columnWidths.getInt(column);
+              StringBuilder empty = new StringBuilder();
+              for(int i=0;i<w;i++){
+                  empty.append(" ");
+              }
+              rowsToPrint[row].append(empty.toString());//Append spaces to ensure the format
+          }
+      }
+    }
+
+    /** loops the rows and print **/
+    for(int i=0;i<rowsToPrint.length;i++){
+      rowsToPrint[i].append("\n\r");//wrap line..
+      try {
+          printer.printText_FullParam(rowsToPrint[i].toString(), size, align, center, bold, underline)
+      } catch (Exception e){
+        e.printStackTrace();
+        System.out.println("COMMAND_NOT_SEND");
+      }
+    }
+    return;
+  }
 }
+
