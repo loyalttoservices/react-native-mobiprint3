@@ -70,11 +70,11 @@ const print = async () => {
     /* isBold */ true,
     /* isUnderLine */ false
   );
-  let columnWidths = [12, 6, 6, 8];
+  let columnWidths = [8, 8, 8, 8];
   await Mobiprint3plus.printColumn(
     columnWidths,
     [0 /* left */, 1 /* center */, 1 /* center */, 2 /* right */],
-    ["Produit", "quantité", "Prix ​​unitaire", "Montant"],
+    ["Produit", "quantité", "Prix", "Montant"],
     {
       /* FontSize : normal = 0, small = 1, medium = 2, large = 3 */ size: 0,
       /* left = 0 , right = 1 */ align: 0,
