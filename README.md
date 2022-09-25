@@ -29,7 +29,7 @@ const print = async () => {
 
   await Mobiprint3plus.printImage(
     /* Image base64 encoder */ base64Image,
-    /* Image option */ { width: 200, left: 40 }
+    /* Image option */ { width: 384 }
   );
   await Mobiprint3plus.printHeader("CompanyName");
   await Mobiprint3plus.printText("Hello dear!"); /* simple text */
@@ -79,7 +79,7 @@ const print = async () => {
     {
       /* FontSize : normal = 0, small = 1, medium = 2, large = 3 */ size: 0,
       /* left = 0 , right = 1 */ align: 0,
-      /* center = 1, null = 0 */ center: 0,
+      /* center = 1, null = 0 */ center: 1,
       /* isBold */ bold: false,
       /* isUnderLine */ underline: false,
     }
