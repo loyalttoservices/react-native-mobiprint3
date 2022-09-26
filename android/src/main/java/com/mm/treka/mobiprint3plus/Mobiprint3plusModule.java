@@ -106,7 +106,12 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void printLine() {
-    printCenterText("--------------------------------------------", 0, false, false);
+    printCenterText(
+      "--------------------------------------------",
+      0,
+      false,
+      false
+    );
   }
 
   @ReactMethod
@@ -115,9 +120,11 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
     @Nullable ReadableMap options
   ) {
     int width = 0;
+    int height = 0;
     int leftPadding = 0;
     if (options != null) {
       width = options.hasKey("width") ? options.getInt("width") : 0;
+      height = options.hasKey("height") ? options.getInt("height") : 0;
       leftPadding = options.hasKey("left") ? options.getInt("left") : 0;
     }
 
@@ -126,20 +133,26 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
       width = 384;
     }
 
+    if (height > 200 || height == 0) {
+      height = 200;
+    }
+
     try {
       byte[] bytes = Base64.decode(base64encodeStr, Base64.DEFAULT);
       if (bytes != null) {
         Bitmap mBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
         int mwidth = mBitmap.getWidth();
+        int mheight = mBitmap.getWidth();
 
-        int deffInWidth = width / 1.8;
+        int deffInWidth = width - mwidth;
+        int deffInHeight = height - mheight;
 
         printBitmap(
           getResizedBitmap(
             mBitmap,
             mBitmap.getWidth() + deffInWidth,
-            mBitmap.getHeight() + deffInWidth
+            mBitmap.getHeight() + deffInHeight
           ),
           Bitmap.Config.ARGB_8888
         );
@@ -171,7 +184,7 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
     int width = bm.getWidth();
     int height = bm.getHeight();
     float scaleWidth = ((float) newWidth) / width;
-    float scaleHeight = ((float) newHeight);
+    float scaleHeight = ((float) newHeight) / height;
     // CREATE A MATRIX FOR THE MANIPULATION
     Matrix matrix = new Matrix();
     // RESIZE THE BIT MAP
