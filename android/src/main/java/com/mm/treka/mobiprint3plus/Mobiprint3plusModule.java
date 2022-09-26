@@ -99,14 +99,14 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void printHeader(String text) {
-    printCenterText("********************************", 1, true, false);
-    printCenterText("*********** " + text + " ************", 1, true, false);
-    printCenterText("********************************", 1, true, false);
+    printCenterText("********************************", 0, true, false);
+    printCenterText("*********** " + text + " ************", 0, true, false);
+    printCenterText("********************************", 0, true, false);
   }
 
   @ReactMethod
   public void printLine() {
-    printCenterText("================================", 1, false, false);
+    printCenterText("================================", 0, false, false);
   }
 
   @ReactMethod
