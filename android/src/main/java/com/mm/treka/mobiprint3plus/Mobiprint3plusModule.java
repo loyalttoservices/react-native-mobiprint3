@@ -107,7 +107,7 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void printLine() {
     printCenterText(
-      "--------------------------------------------",
+      "------------------------------------------",
       0,
       false,
       false
