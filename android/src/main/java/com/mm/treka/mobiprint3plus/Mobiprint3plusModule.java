@@ -106,7 +106,7 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void printLine() {
-    printCenterText("================================", 0, false, false);
+    printCenterText("--------------------------------------------", 0, false, false);
   }
 
   @ReactMethod
@@ -133,7 +133,7 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
 
         int mwidth = mBitmap.getWidth();
 
-        int deffInWidth = width - mwidth;
+        int deffInWidth = width / 1.8;
 
         printBitmap(
           getResizedBitmap(
@@ -171,7 +171,7 @@ public class Mobiprint3plusModule extends ReactContextBaseJavaModule {
     int width = bm.getWidth();
     int height = bm.getHeight();
     float scaleWidth = ((float) newWidth) / width;
-    float scaleHeight = ((float) newHeight) / height;
+    float scaleHeight = ((float) newHeight);
     // CREATE A MATRIX FOR THE MANIPULATION
     Matrix matrix = new Matrix();
     // RESIZE THE BIT MAP
